@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Journal Collaboratif</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    .note {
+      background: white;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      box-shadow: 0 0 6px #ccc;
+    }
+    textarea {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px;
+    }
+    #loginSection, #journalSection {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loginSection">
+    <h2>Journal Collaboratif</h2>
+    <button id="loginBtn">Se connecter avec Google</button>
+  </div>
+
+  <div id="journalSection">
+    <p>Connecté en tant que <span id="userName"></span></p>
+    <button id="logoutBtn">Se déconnecter</button>
+    <h3>Ajouter une note :</h3>
+    <textarea id="noteInput" placeholder="Écris ta note ici..."></textarea><br>
+    <button id="saveNoteBtn">Enregistrer la note</button>
+
+    <h3>📝 Notes :</h3>
+    <div id="notes"></div>
+  </div>
+
+  <script>
+    // 🔑 Ton firebaseConfig ici
+const firebaseConfig = {
+  apiKey: "AIzaSyCIU7zTaFdDXsNK-acq8msDJH7rHrO2s8U",
+  authDomain: "board-cd40b.firebaseapp.com",
+  projectId: "board-cd40b",
+  storageBucket: "board-cd40b.firebasestorage.app",
+  messagingSenderId: "335225189076",
+  appId: "1:335225189076:web:a0567a842a3950c8a5c141",
+  measurementId: "G-LEGPBNM751"
+};
+    };
+
+    // ✅ Initialisation de Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const loginSection = document.getElementById("loginSection");
+    const journalSection = document.getElementById("journalSection");
+    const userNameSpan = document.getElementById("userName");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const noteInput = document.getElementById("noteInput");
+    const saveNoteBtn = document.getElementById("saveNoteBtn");
+    const notesDiv = document.getElementById("notes");
+
+    // 🔐 Login avec Google
+    loginBtn.onclick = () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider);
+    };
+
+    // 🔓 Déconnexion
+    logoutBtn.onclick = () => {
+      auth.signOut();
+    };
+
+    // 🔁 Auth State Listener
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        loginSection.style.display = "none";
+        journalSection.style.display = "block";
+        userNameSpan.textContent = user.displayName;
+        loadNotes();
+      } else {
+        loginSection.style.display = "block";
+        journalSection.style.display = "none";
+      }
+    });
+
+    // 💾 Enregistrer une note
+    saveNoteBtn.onclick = () => {
+      const content = noteInput.value.trim();
+      if (!content) return;
+
+      db.collection("notes").add({
+        content,
+        author: auth.currentUser.displayName,
+        uid: auth.currentUser.uid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        noteInput.value = "";
+        loadNotes();
+      });
+    };
+
+    // 📖 Afficher les notes
+    function loadNotes() {
+      notesDiv.innerHTML = "";
+      db.collection("notes")
+        .orderBy("createdAt", "desc")
+        .get()
+        .then(snapshot => {
+          snapshot.forEach(doc => {
+            const note = doc.data();
+            const div = document.createElement("div");
+            div.className = "note";
+            div.innerHTML = `<strong>${note.author}</strong><br>${note.content}`;
+            notesDiv.appendChild(div);
+          });
+        });
+    }
+  </script>
+
+</body>
+</html>
