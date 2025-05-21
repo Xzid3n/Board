@@ -90,20 +90,34 @@ const firebaseConfig = {
     };
 
     // 🔁 Auth State Listener
-auth.onAuthStateChanged(user => {
-  console.log("Etat de connexion : ", user); // ← pour vérifier si l'utilisateur est bien connecté
-
+// Vérifie si l'utilisateur est déjà connecté
+firebase.auth().onAuthStateChanged(user => {
   if (user) {
+    // Utilisateur connecté, cache le bouton de connexion et montre les notes
     loginSection.style.display = "none";
     journalSection.style.display = "block";
     userNameSpan.textContent = user.displayName;
-
-    loadNotes(); // ← vérifie que cette fonction existe bien
+    loadNotes();
   } else {
+    // Si l'utilisateur n'est pas connecté, affiche le bouton
     loginSection.style.display = "block";
     journalSection.style.display = "none";
   }
 });
+
+// Fonction pour la connexion Google
+function googleSignIn() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider)
+    .then(result => {
+      const user = result.user;
+      console.log("Utilisateur connecté : ", user);
+    })
+    .catch(error => {
+      console.error("Erreur de connexion Google : ", error);
+    });
+}
+
 
     // 💾 Enregistrer une note
     saveNoteBtn.onclick = () => {
