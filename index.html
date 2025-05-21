@@ -90,17 +90,20 @@ const firebaseConfig = {
     };
 
     // 🔁 Auth State Listener
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        loginSection.style.display = "none";
-        journalSection.style.display = "block";
-        userNameSpan.textContent = user.displayName;
-        loadNotes();
-      } else {
-        loginSection.style.display = "block";
-        journalSection.style.display = "none";
-      }
-    });
+auth.onAuthStateChanged(user => {
+  console.log("Etat de connexion : ", user); // ← pour vérifier si l'utilisateur est bien connecté
+
+  if (user) {
+    loginSection.style.display = "none";
+    journalSection.style.display = "block";
+    userNameSpan.textContent = user.displayName;
+
+    loadNotes(); // ← vérifie que cette fonction existe bien
+  } else {
+    loginSection.style.display = "block";
+    journalSection.style.display = "none";
+  }
+});
 
     // 💾 Enregistrer une note
     saveNoteBtn.onclick = () => {
@@ -119,21 +122,28 @@ const firebaseConfig = {
     };
 
     // 📖 Afficher les notes
-    function loadNotes() {
-      notesDiv.innerHTML = "";
-      db.collection("notes")
-        .orderBy("createdAt", "desc")
-        .get()
-        .then(snapshot => {
-          snapshot.forEach(doc => {
-            const note = doc.data();
-            const div = document.createElement("div");
-            div.className = "note";
-            div.innerHTML = `<strong>${note.author}</strong><br>${note.content}`;
-            notesDiv.appendChild(div);
-          });
-        });
-    }
+function loadNotes() {
+  console.log("Chargement des notes...");
+
+  notesDiv.innerHTML = "";
+  db.collection("notes")
+    .orderBy("createdAt", "desc")
+    .get()
+    .then(snapshot => {
+      snapshot.forEach(doc => {
+        const note = doc.data();
+        console.log("Note trouvée : ", note); // ← ajoute ceci
+
+        const div = document.createElement("div");
+        div.className = "note";
+        div.innerHTML = `<strong>${note.author}</strong><br>${note.content}`;
+        notesDiv.appendChild(div);
+      });
+    })
+    .catch(error => {
+      console.error("Erreur de chargement des notes :", error); // ← en cas d'erreur
+    });
+}
   </script>
 
 </body>
